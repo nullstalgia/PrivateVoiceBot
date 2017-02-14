@@ -109,9 +109,12 @@ func main() {
 	voicePrefixKey, err := section.GetKey("voiceChannelPrefix")
 	voicePrefix = voicePrefixKey.String()
 
+	// This is fun due to differences in types
 	tickerDelayKey, err := section.GetKey("tickerDelay")
+	// So we first turn it into an int
 	tickerDelayInt, err := tickerDelayKey.Int()
 	checkError(err)
+	// Then into a Duration and hope it works! :)
 	tickerDelay = time.Duration(tickerDelayInt)
 
 	channelDeleteDelayKey, err := section.GetKey("unjoinedChannelDeleteDelay")
@@ -124,6 +127,7 @@ func main() {
 
 	// Create the discordgo State.
 	state = dg.State
+	// Turn off some stuff we don't care about. (Saves memory)
 	state.TrackEmojis = false
 	state.TrackRoles = false
 
@@ -153,6 +157,8 @@ func main() {
 		for {
 			select {
 			case <-ticker.C:
+				// Checking all the channels for ones who's overstayed their welcome
+				// By that, channels who's timestamps are "expired."
 				for k, _ := range channels {
 					if channels[k].Timestamp+channelDeleteDelay <= int(time.Now().Unix()) && channels[k].Joined == false {
 						dg.ChannelDelete(channels[k].ChannelID)
@@ -171,12 +177,18 @@ func main() {
 	return
 }
 
+// This is a fun function. (Heh)
 func checkStateError(err error, checkedID string, s *discordgo.Session, pointerToOriginal interface{}) {
+	// First, it's just a basic error checker
 	if err == nil {
 		return
 	}
 
+	// But if the State did not have what we wanted...
+
+	// We see what type we passed to it before
 	switch doublePointer := pointerToOriginal.(type) {
+	// And based on that, we make a new instance and set the object to that new one by the pointer!
 	case *discordgo.User:
 		user, err := s.User(checkedID)
 		checkError(err)
@@ -190,6 +202,8 @@ func checkStateError(err error, checkedID string, s *discordgo.Session, pointerT
 		checkError(err)
 		*doublePointer = *guild
 	}
+
+	// Debugging stuffs
 	fmt.Println("State didn't have this!")
 }
 
@@ -275,6 +289,8 @@ func messageCreate(s *discordgo.Session, message *discordgo.MessageCreate) {
 			return
 		}
 
+		// Explode the command so we can look at some of the stuff a bit easier
+		// TODO: Possibly make this a bit more streamlined since I don't use a fair portion of this.
 		explodedCommand := explodeCommand(message.Content[1:])
 		baseCommand := strings.ToLower(explodedCommand[0])
 
@@ -364,6 +380,7 @@ func messageCreate(s *discordgo.Session, message *discordgo.MessageCreate) {
 							s.ChannelPermissionSet(channels[userVoiceState.ChannelID].ChannelID, thisUser.ID, "member", 36700160, 0)
 						}
 
+						// TODO: Combine these two loops.
 					loop:
 						for i := 0; i < len(channels[userVoiceState.ChannelID].OPs); i++ {
 							url := channels[userVoiceState.ChannelID].OPs[i]
