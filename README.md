@@ -4,7 +4,7 @@ This is a bot made with Golang for Discord for making ephemeral (temporary) priv
 
 It was built with user simplicity in mind, in both set-up and execution.
 
-## How to use the bot
+## How to set up the bot
 
 1. Download `main.go`
 
@@ -31,4 +31,42 @@ It was built with user simplicity in mind, in both set-up and execution.
     1. If you don't know how to do that, you might want to look at a more robust guide.
     
         1. A good example is the [FAQ from @Just-Some-Bot 's MusicBot. (link)](https://github.com/Just-Some-Bots/MusicBot/wiki/FAQ)
+        
+## How to use the bot in a server
+
+(Here, I assume the prefix is set to the default of `!`)
+
+ - !new [name]
+ 
+    - Makes a new Private Voice channel (if you're not in one/don't already own one)
+    
+    - If a name is given, use that name for the channel
+    
+ -  !invite @person...
+ 
+    - Invites users who are mentioned
+    
+    - Can mention more than one at a time
+    
+ - !op @person... (NEED OP/OWNER PERMS)
+    
+    - Gives a user perms similar to the owner.
+    
+    - Can mention more than one at a time
+    
+ - !deop @person... (NEED OP/OWNER PERMS)
+    
+    - Revokes said perms.
+    
+    - Can mention more than one at a time
+    
+ - !remove @person... (NEED OP/OWNER PERMS)
+ 
+    - Removes a person from a voice channel
+    
+    - Can mention more than one at a time
+    
+ - !delete (NEED OP/OWNER PERMS)
+ 
+    - Deletes the voice channel
         
