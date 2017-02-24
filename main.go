@@ -14,6 +14,7 @@ type voiceChannel struct {
 	GuildID   string
 	ChannelID string
 	OwnerID   string
+	Name      string
 	OPs       []string
 	Joined    bool
 	Timestamp int
@@ -302,12 +303,13 @@ func messageCreate(s *discordgo.Session, message *discordgo.MessageCreate) {
 					channel, err := state.Channel(message.ChannelID)
 					checkStateError(err, message.ChannelID, s, channel)
 					userVoiceState := getVoiceStateOfUser(s, message.Author.ID, channel.GuildID)
-					for k, _ := range channels {
+					for k, v := range channels {
 						if k == userVoiceState.ChannelID {
 							for _, thisUser := range message.Mentions {
 								// Set the thisUser to be able to connect and talk
 								s.ChannelPermissionSet(channels[k].ChannelID, thisUser.ID, "member", 36700160, 0)
 							}
+							_, _ = s.ChannelMessageSend(message.ChannelID, "They can now join your channel, `"+v.Name+"`")
 						}
 					}
 				}
@@ -339,6 +341,7 @@ func messageCreate(s *discordgo.Session, message *discordgo.MessageCreate) {
 							s.ChannelPermissionSet(userVoiceState.ChannelID, thisUser.ID, "member", 40894464, 0)
 							channels[userVoiceState.ChannelID].OPs = append(channels[userVoiceState.ChannelID].OPs, thisUser.ID)
 						}
+						_, _ = s.ChannelMessageSend(message.ChannelID, "They are now OP'd in your channel, `"+channels[userVoiceState.ChannelID].Name+"`")
 					}
 				}
 			} else if baseCommand == "deop" {
@@ -392,6 +395,8 @@ func messageCreate(s *discordgo.Session, message *discordgo.MessageCreate) {
 								}
 							}
 						}
+
+						_, _ = s.ChannelMessageSend(message.ChannelID, "They are now De-OP'd in your channel, `"+channels[userVoiceState.ChannelID].Name+"`")
 					}
 				}
 			} else if baseCommand == "delete" {
@@ -411,14 +416,14 @@ func messageCreate(s *discordgo.Session, message *discordgo.MessageCreate) {
 								break
 							}
 						}
-
 						break
 					}
 				}
 				if isOp {
 					s.ChannelDelete(userVoiceState.ChannelID)
+					_, _ = s.ChannelMessageSend(message.ChannelID, "Deleted channel: `"+channels[userVoiceState.ChannelID].Name+"`")
 				}
-			} else if baseCommand == "remove" {
+			} else if baseCommand == "kick" {
 				if len(message.Mentions) > 0 {
 					isOp := false
 					channel, err := state.Channel(message.ChannelID)
@@ -458,6 +463,7 @@ func messageCreate(s *discordgo.Session, message *discordgo.MessageCreate) {
 								}
 							}
 						}
+						_, _ = s.ChannelMessageSend(message.ChannelID, "They can no longer join/speak in your channel, `"+channels[userVoiceState.ChannelID].Name+"`")
 					}
 				}
 			}
@@ -518,10 +524,13 @@ func makeNewPrivateVoice(s *discordgo.Session, title string, message *discordgo.
 				GuildID:   channel.GuildID,
 				ChannelID: newChannel.ID,
 				OwnerID:   message.Author.ID,
+				Name:      voicePrefix + title,
 				OPs:       []string{},
 				Joined:    false,
 				Timestamp: int(time.Now().Unix()),
 			}
+
+			_, _ = s.ChannelMessageSend(message.ChannelID, "Created a new voice channel! Name: `"+voicePrefix+title+"`")
 		} else {
 			// Tell them they can't make a channel.
 			_, _ = s.ChannelMessageSend(message.ChannelID, "<@"+message.Author.ID+">, you either already own a channel or are in a private voice channel!")
